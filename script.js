@@ -1,98 +1,166 @@
-// Select Elements
-const addExpenseButton = document.getElementById('addExpenseButton');
-const descriptionInput = document.getElementById('description');
-const amountInput = document.getElementById('amount');
-const categoryInput = document.getElementById('category');
-const expenseList = document.getElementById('expenseList');
-const totalExpenseDisplay = document.getElementById('totalExpense');
-const expenseChartCanvas = document.getElementById('expenseChart');
+document.addEventListener("DOMContentLoaded", function() {
+    const descriptionInput = document.getElementById('description');
+    const amountInput = document.getElementById('amount');
+    const categoryInput = document.getElementById('category');
+    const addExpenseButton = document.getElementById('addExpenseButton');
+    const expenseList = document.getElementById('expenseList');
+    const totalExpenseDisplay = document.getElementById('totalExpense');
+    const weeklyExpenseDisplay = document.getElementById('weeklyExpense');
+    const monthlyExpenseDisplay = document.getElementById('monthlyExpense');
+    const expenseChart = document.getElementById('expenseChart').getContext('2d');
 
-// Initialize total expense and categories
-let totalExpense = 0;
-let expenseCategories = {
-    Food: 0,
-    Transport: 0,
-    Entertainment: 0,
-    Other: 0
-};
+    let expenses = JSON.parse(localStorage.getItem('expenses')) || [];
+    let chart;
+    let isEditMode = false;
+    let editId = null;
 
-// Initialize Chart.js pie chart
-let expenseChart = new Chart(expenseChartCanvas, {
-    type: 'pie',
-    data: {
-        labels: ['Food', 'Transport', 'Entertainment', 'Other'],
-        datasets: [{
-            label: 'Expense Categories',
-            data: [0, 0, 0, 0], // Initial data
-            backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0'],
-            hoverBackgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0']
-        }]
-    },
-    options: {
-        responsive: true
-    }
-});
+    // Function to add or update an expense
+    function addOrUpdateExpense(description, amount, category) {
+        if (isEditMode) {
+            // Update existing expense
+            expenses = expenses.map(expense => {
+                if (expense.id === editId) {
+                    return { ...expense, description, amount: parseFloat(amount), category };
+                }
+                return expense;
+            });
+            isEditMode = false;
+            editId = null;
+            addExpenseButton.textContent = 'Add Expense';  // Reset button text
+        } else {
+            // Add new expense
+            const expense = {
+                id: Date.now(),
+                description,
+                amount: parseFloat(amount),
+                category,
+                date: new Date()
+            };
+            expenses.push(expense);
+        }
 
-// Add event listener to the button
-addExpenseButton.addEventListener('click', function() {
-    const description = descriptionInput.value;
-    const amount = parseFloat(amountInput.value);
-    const category = categoryInput.value;
-
-    // Validate the input
-    if (description === "" || isNaN(amount) || amount <= 0) {
-        alert('Please enter a valid description and amount');
-        return;
-    }
-
-    // Create a new expense item
-    const expenseItem = document.createElement('li');
-    expenseItem.innerHTML = `
-        ${description} - $<span>${amount.toFixed(2)}</span> (${category})
-        <button class="remove-btn">Remove</button>
-    `;
-
-    // Append the new item to the list
-    expenseList.appendChild(expenseItem);
-
-    // Update the total expense
-    totalExpense += amount;
-    totalExpenseDisplay.textContent = totalExpense.toFixed(2);
-
-    // Update category data
-    expenseCategories[category] += amount;
-    updateChart();
-
-    // Clear the input fields
-    descriptionInput.value = '';
-    amountInput.value = '';
-
-    // Add event listener to the remove button
-    const removeButton = expenseItem.querySelector('.remove-btn');
-    removeButton.addEventListener('click', function() {
-        // Remove the expense from the total
-        const amountToRemove = parseFloat(expenseItem.querySelector('span').textContent);
-        const categoryToRemove = category; // use category from scope
-
-        totalExpense -= amountToRemove;
-        totalExpenseDisplay.textContent = totalExpense.toFixed(2);
-
-        // Update category data
-        expenseCategories[categoryToRemove] -= amountToRemove;
+        localStorage.setItem('expenses', JSON.stringify(expenses));
+        renderExpenses();
+        updateTotals();
         updateChart();
+    }
 
-        // Remove the expense item from the list
-        expenseItem.remove();
+    // Function to delete an expense
+    function deleteExpense(id) {
+        expenses = expenses.filter(expense => expense.id !== id);
+        localStorage.setItem('expenses', JSON.stringify(expenses));
+        renderExpenses();
+        updateTotals();
+        updateChart();
+    }
+
+    // Function to edit an existing expense
+    function editExpense(id) {
+        const expense = expenses.find(exp => exp.id === id);
+        if (expense) {
+            descriptionInput.value = expense.description;
+            amountInput.value = expense.amount;
+            categoryInput.value = expense.category;
+            isEditMode = true;
+            editId = id;
+            addExpenseButton.textContent = 'Update Expense';  // Change button text during edit
+        }
+    }
+
+    // Function to render expenses to the DOM
+    function renderExpenses() {
+        expenseList.innerHTML = '';
+        expenses.forEach(expense => {
+            const li = document.createElement('li');
+            li.classList.add('expense-item');
+            li.innerHTML = `
+                ${expense.description} - ₹${expense.amount.toFixed(2)} (${expense.category})
+                <button class="edit-btn" data-id="${expense.id}">Edit</button>
+                <button class="delete-btn" data-id="${expense.id}">Delete</button>
+            `;
+            expenseList.appendChild(li);
+        });
+
+        // Add event listeners to Edit and Delete buttons
+        document.querySelectorAll('.edit-btn').forEach(button => {
+            button.addEventListener('click', function() {
+                const id = parseInt(this.getAttribute('data-id'));
+                editExpense(id);
+            });
+        });
+
+        document.querySelectorAll('.delete-btn').forEach(button => {
+            button.addEventListener('click', function() {
+                const id = parseInt(this.getAttribute('data-id'));
+                deleteExpense(id);
+            });
+        });
+    }
+
+    // Function to calculate and update total, weekly, and monthly expenses
+    function updateTotals() {
+        const now = new Date();
+        const totalExpense = expenses.reduce((sum, expense) => sum + expense.amount, 0);
+
+        const weeklyExpense = expenses.reduce((sum, expense) => {
+            const expenseDate = new Date(expense.date);
+            const diffDays = Math.floor((now - expenseDate) / (1000 * 60 * 60 * 24));
+            return diffDays < 7 ? sum + expense.amount : sum;
+        }, 0);
+
+        const monthlyExpense = expenses.reduce((sum, expense) => {
+            const expenseDate = new Date(expense.date);
+            return expenseDate.getMonth() === now.getMonth() ? sum + expense.amount : sum;
+        }, 0);
+
+        totalExpenseDisplay.textContent = totalExpense.toFixed(2);
+        weeklyExpenseDisplay.textContent = weeklyExpense.toFixed(2);
+        monthlyExpenseDisplay.textContent = monthlyExpense.toFixed(2);
+    }
+
+    // Function to update the Chart.js chart
+    function updateChart() {
+        const categories = ['Food', 'Transport', 'Entertainment', 'Other'];
+        const categorySums = categories.map(category => {
+            return expenses
+                .filter(expense => expense.category === category)
+                .reduce((sum, expense) => sum + expense.amount, 0);
+        });
+
+        if (chart) chart.destroy();  // Clear the existing chart
+        chart = new Chart(expenseChart, {
+            type: 'pie',
+            data: {
+                labels: categories,
+                datasets: [{
+                    data: categorySums,
+                    backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0']
+                }]
+            }
+        });
+    }
+
+    // Load data from local storage and initialize the display
+    function init() {
+        renderExpenses();
+        updateTotals();
+        updateChart();
+    }
+
+    // Event listener for adding/updating a new expense
+    addExpenseButton.addEventListener('click', function() {
+        const description = descriptionInput.value;
+        const amount = amountInput.value;
+        const category = categoryInput.value;
+
+        if (description && amount && category) {
+            addOrUpdateExpense(description, amount, category);
+            descriptionInput.value = '';
+            amountInput.value = '';
+            categoryInput.value = 'Food';
+        }
     });
-});
 
-// Function to update the chart
-function updateChart() {
-    expenseChart.data.datasets[0].data = [
-        expenseCategories.Food,
-        expenseCategories.Transport,
-        expenseCategories.Entertainment,
-        expenseCategories.Other
-    ];
-    expenseChart.update();
-}
+    // Initialize the app
+    init();
+});
