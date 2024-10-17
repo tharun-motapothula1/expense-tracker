@@ -1,115 +1,155 @@
-/* General Styles */
+/* General body styling */
 body {
-    font-family: 'Poppins', sans-serif;
-    background-color: #f5f7fa;
-    color: #333;
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 100vh;
-    margin: 0;
+    min-height: 100vh;
+    background-color: #f4f4f9;
 }
 
-/* Main Expense Tracker Container */
+/* Main expense tracker container */
 .expense-tracker {
+    width: 100%;
+    max-width: 1200px;
     background-color: white;
     padding: 20px;
     border-radius: 10px;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-    width: 100%;
-    max-width: 400px;
-    text-align: center;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
 }
 
-/* Input Group Styling */
-.input-group {
-    display: flex;
-    justify-content: space-between;
+/* Logo styles */
+.logo {
+    font-size: 5vw; /* Make the logo size relative to the viewport width */
+    font-weight: bold;
+    color: #f7f7f8;
+    text-align: center;
+    margin-bottom: 20px;
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    background-color: #5a5a63;
+    padding: 10px;
+    border-radius: 15px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+    width: 100%;
+}
+
+.logo img {
+    width: 8vw; /* Responsive image width */
+    height: auto;
+    margin-right: 15px;
+    vertical-align: middle;
+}
+
+/* Flexbox for form and chart side by side */
+.input-group, .chart-container {
+    flex: 1;
+    min-width: 300px;
     margin-bottom: 20px;
 }
 
-input[type="text"], input[type="number"] {
-    width: 60%;
+/* Styling for the input group */
+.input-group input, 
+.input-group select, 
+.input-group button {
+    display: block;
+    margin-bottom: 10px;
     padding: 10px;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-    outline: none;
-    margin-right: 10px;
+    width: 100%;
+    box-sizing: border-box;
 }
 
-button {
-    padding: 10px 20px;
-    background-color: #28a745;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-}
-
-button:hover {
-    background-color: #218838;
-}
-
-/* Total Expense Display */
+/* Styling for total expense display */
 .total {
     margin-bottom: 20px;
 }
 
-.total h3 {
-    font-size: 1.5rem;
-    color: #333;
-}
-
-/* Expense List */
+/* Responsive expense list */
 .expense-list {
-    list-style: none;
+    list-style-type: none;
     padding: 0;
-    margin: 0;
 }
 
-.expense-list li {
+.expense-item {
     background-color: #f1f1f1;
-    margin-bottom: 10px;
     padding: 10px;
-    border-radius: 5px;
+    margin-bottom: 10px;
     display: flex;
     justify-content: space-between;
     align-items: center;
 }
 
-.expense-list li span {
-    color: #d9534f;
-    font-weight: bold;
-}
-
-.remove-btn {
-    background-color: #d9534f;
-    border: none;
+.edit-btn, 
+.delete-btn {
+    margin-left: 10px;
+    background-color: #10ca1c;
     color: white;
+    border: none;
     padding: 5px 10px;
-    border-radius: 5px;
     cursor: pointer;
-}
-
-.remove-btn:hover {
-    background-color: #c9302c;
-}
-/* Add some style for the category dropdown */
-select {
-    padding: 10px;
     border-radius: 5px;
-    border: 1px solid #ddd;
-    outline: none;
-    margin-right: 10px;
-    width: 100px;
 }
 
-/* Chart container styling */
+.delete-btn {
+    background-color: #dc3545;
+}
+
+
+/* Responsive chart */
 .chart-container {
-    margin-top: 30px;
+    min-width: 300px;
+    max-width: 100%;
     padding: 20px;
-    background-color: #fff;
-    border-radius: 10px;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+
+canvas {
+    width: 100% !important;
+    height: auto !important;
+}
+
+/* Media Queries for Responsiveness */
+
+/* For tablets and medium-sized screens */
+@media (max-width: 768px) {
+    .logo {
+        font-size: 6vw; /* Make the logo slightly smaller */
+    }
+
+    .expense-tracker {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .input-group, 
+    .chart-container {
+        min-width: 100%; /* Full width on smaller screens */
+    }
+}
+
+/* For mobile screens */
+@media (max-width: 480px) {
+    .logo {
+        font-size: 8vw;
+        padding: 8px;
+    }
+
+    .input-group input, 
+    .input-group select, 
+    .input-group button {
+        font-size: 1.2em; /* Increase font size for easier touch interaction */
+    }
+
+    .total h3 {
+        font-size: 1.5em;
+    }
+
+    .edit-btn, .delete-btn {
+        font-size: 1em;
+        padding: 7px 15px;
+    }
 }
